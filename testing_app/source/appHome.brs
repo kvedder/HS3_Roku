@@ -14,12 +14,12 @@
 '********************************************************************
 '** selecting close exits the application
 '********************************************************************
-Function getSchools()
-    url="http://hs3.tv/api/list_schools.php"
+Function getVideos(id)
+    url="http://hs3.tv/api/list_games_by_client.php?id="+id
     xfer=createobject("roURLTransfer")
     xfer.seturl(url)
     data=xfer.gettostring()
-    data2 = "{" + Chr(34) + "Schools" + Chr(34) + ":" + data + "}" 
+    data2 = "{" + Chr(34) + "Videos" + Chr(34) + ":" + data + "}" 
     
    
     Return data2
@@ -29,22 +29,23 @@ Sub showImageCanvas(data)
 
 json = ParseJSON(data)
 
-canvasItems = CreateObject("roArray", json.Schools.count(), false)
-location = 100
-for each school in json.Schools
- ' print school.school_name
+'canvasItems = CreateObject("roArray", 1, false)
+canvasItems = CreateObject("roArray", json.Videos.count(), false)
 
+location = 100
+
+for each video in json.Videos
 
     add = { 
-            text: school.school_name
+            text: video.asset_title
             TargetRect:{x:location,y:location,w:400,h:300}
         }
         
-    
-
-    canvasItems.push(add)
+canvasItems.push(add)
 location = location + 100
- end for
+
+end for
+
 
    canvas = CreateObject("roImageCanvas")
    port = CreateObject("roMessagePort")

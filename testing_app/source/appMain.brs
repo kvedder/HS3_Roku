@@ -9,7 +9,7 @@ Sub Main()
     'initialize theme attributes like titles, logos and overhang color
     initTheme()
 
-    data = getSchools()
+    data = getVideos("43")
     showImageCanvas(data)
 
 End Sub
