@@ -78,13 +78,18 @@ Function GetBreakfastMenuOptions(id) as object
     'use foreach to populate array
     for each video in json.Videos
 
+    data = getVideoURL(id, video.kt_entry_id)
+    streamURL = ParseJSON(data)
+
         add = { 
             
             ShortDescriptionLine1: video.asset_title
-            Price: "$0.99"
-            Calories: "350"
+            ID: id
+            EntryID: video.kt_entry_id
+            Calories: "500"
             SDPosterURL: "http://video.wtlw.com/p/101/sp/10100/thumbnail/entry_id/"+video.kt_entry_id+"/width/285/height/145"
             HDPosterURL: "http://video.wtlw.com/p/101/sp/10100/thumbnail/entry_id/"+video.kt_entry_id+"/width/385/height/218"
+            streamURL: streamURL
             }
             
     m.options.push(add)
@@ -104,14 +109,18 @@ Function ShowBreakfastItemDetails(index as integer) as integer
     detailsScreen.SetStaticRatingEnabled(false)
     
     details = {
+        id: m.options[index].ID
+        entryId: m.options[index].EntryID
         HDPosterUrl: m.options[index].HDPosterURL
         SDPosterUrl: m.options[index].SDPosterURL
-        Description: m.options[index].ShortDescriptionLine1
+        'Description: m.options[index].ShortDescriptionLine1
+        Description: m.options[index].streamURL
         LabelAttrs: ["Price:", "Calories per Serving:"]
         LabelVals: [m.options[index].Price, m.options[index].Calories]
+        StreamURL: m.options[index].streamURL
     }
     detailsScreen.SetContent(details)
-    detailsScreen.AddButton(1, "Place Order")
+    detailsScreen.AddButton(1, "Play This Game")
     detailsScreen.AddButton(2, "Report to FDA")
     detailsScreen.show()
     
@@ -121,16 +130,17 @@ Function ShowBreakfastItemDetails(index as integer) as integer
             if (msg.isScreenClosed())
                 return -1
             else if (msg.isButtonPressed())
-                DetailsScreenButtonClicked( msg.GetIndex() )
+                DetailsScreenButtonClicked( msg.GetIndex(), details )
             endif
         endif
     end while
 End Function
 
-Function DetailsScreenButtonClicked(index as integer) as void
+Function DetailsScreenButtonClicked(index as integer, details) as void
     dialog = CreateObject("roOneLineDialog")
     if (index = 1)
-        dialog.SetTitle("Placing Order")
+        'dialog.SetTitle("Placing Order")
+        displayVideo(details)
     else if (index = 2)
         dialog.SetTitle("Reporting Food to FDA")
     endif
@@ -138,4 +148,92 @@ Function DetailsScreenButtonClicked(index as integer) as void
     dialog.show()
     
     Sleep(4000)
+End Function
+
+Function getVideoURL(ID, entryId)
+   
+    url="http://hs3.tv/api/get_play_urls.php?id="+ID+"&entryid="+entryId
+    xfer=createobject("roURLTransfer")
+    xfer.seturl(url)
+    data=xfer.gettostring()
+    
+      
+    Return data
+End Function
+
+'*************************************************************
+'** displayVideo()
+'*************************************************************
+
+Function displayVideo(details)
+    
+    print "Displaying video: "
+    p = CreateObject("roMessagePort")
+    video = CreateObject("roVideoScreen")
+    video.setMessagePort(p)
+
+    'bitrates  = [0]          ' 0 = no dots, adaptive bitrate
+    'bitrates  = [348]    ' <500 Kbps = 1 dot
+    'bitrates  = [664]    ' <800 Kbps = 2 dots
+    'bitrates  = [996]    ' <1.1Mbps  = 3 dots
+    'bitrates  = [2048]    ' >=1.1Mbps = 4 dots
+    bitrates  = [5000]    
+
+    'Swap the commented values below to play different video clips...
+    urls = details.StreamURL
+    qualities = ["HD"]
+    StreamFormat = "mp4"
+    title = details.Description
+   
+
+    'urls = ["http://video.ted.com/talks/podcast/DanGilbert_2004_480.mp4"]
+    'qualities = ["HD"]
+    'StreamFormat = "mp4"
+    'title = "Dan Gilbert asks, Why are we happy?"
+
+    ' Apple's HLS test stream
+    'urls = ["http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8"]
+    'qualities = ["SD"]
+    'streamformat = "hls"
+    'title = "Apple BipBop Test Stream"
+
+
+       
+    videoclip = CreateObject("roAssociativeArray")
+    videoclip.StreamBitrates = bitrates
+    videoclip.StreamUrls = urls
+    videoclip.StreamQualities = qualities
+    videoclip.StreamFormat = StreamFormat
+    videoclip.Title = title
+
+    
+    video.SetContent(videoclip)
+    video.show()
+
+    lastSavedPos   = 0
+    statusInterval = 10 'position must change by more than this number of seconds before saving
+
+    while true
+        msg = wait(0, video.GetMessagePort())
+        if type(msg) = "roVideoScreenEvent"
+            if msg.isScreenClosed() then 'ScreenClosed event
+                'print "Closing video screen"
+                exit while
+            else if msg.isPlaybackPosition() then
+                nowpos = msg.GetIndex()
+                if nowpos > 10000
+                    
+                end if
+                if nowpos > 0
+                    if abs(nowpos - lastSavedPos) > statusInterval
+                        lastSavedPos = nowpos
+                    end if
+                end if
+            else if msg.isRequestFailed()
+                print "play failed: "; msg.GetMessage()
+            else
+                print "Unknown event: "; msg.GetType(); " msg: "; msg.GetMessage()
+            endif
+        end if
+    end while
 End Function
