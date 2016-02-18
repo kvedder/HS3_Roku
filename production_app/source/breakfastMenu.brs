@@ -86,6 +86,7 @@ Function GetBreakfastMenuOptions(id) as object
             ShortDescriptionLine1: video.asset_title
             ID: id
             EntryID: video.kt_entry_id
+            OfferID: video.cleeng_offer_id
             Calories: "500"
             SDPosterURL: "http://video.wtlw.com/p/101/sp/10100/thumbnail/entry_id/"+video.kt_entry_id+"/width/285/height/145"
             HDPosterURL: "http://video.wtlw.com/p/101/sp/10100/thumbnail/entry_id/"+video.kt_entry_id+"/width/385/height/218"
@@ -111,7 +112,7 @@ Function ShowBreakfastItemDetails(schoolname, index as integer) as integer
     vUrl = getVideoURL(m.options[index].ID, m.options[index].EntryID)
     streamURL = ParseJSON(vUrl)
 
-    accessStatus = checkAccess()
+    accessStatus = checkAccess(m.options[index].OfferID, "zabowers@gmail.com")
   
     details = {
         id: m.options[index].ID
@@ -125,6 +126,8 @@ Function ShowBreakfastItemDetails(schoolname, index as integer) as integer
         LabelVals: [m.options[index].Price, m.options[index].Calories]
         StreamURL: streamURL
         accessStatus: accessStatus
+
+        
     }
     detailsScreen.SetContent(details)
     detailsScreen.AddButton(1, "Play This Game")
@@ -172,8 +175,9 @@ Function getVideoURL(ID, entryId)
     Return data
 End Function
 
-Function checkAccess ()
-    url="http://hs3.tv/api/check_access.php"
+Function checkAccess (offerID, email)
+    url="http://hs3.tv/api/check_access.php?email="+email+"&offerid="+offerID
+    'url="http://hs3.tv/api/check_access.php?email="+email+"offerid="+offerID
     xfer=createobject("roURLTransfer")
     xfer.seturl(url)
     data=xfer.getToString()
