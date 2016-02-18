@@ -52,9 +52,9 @@ Function InitTheme() as void
         OverhangSliceSD: "pkg:/images/Overhang_Slice_HD.png"
         OverhangLogoHD: "pkg:/images/hs3_logo.png"
         OverhangLogoSD: "pkg:/images/hs3_logo.png"
-        OverhangOffsetSD_X: "25"
+        OverhangOffsetSD_X: "45"
         OverhangOffsetSD_Y: "15"
-        OverhangOffsetHD_X: "25"
+        OverhangOffsetHD_X: "45"
         OverhangOffsetHD_Y: "15"
         BreadcrumbTextLeft: brandingBlue
         BreadcrumbTextRight: "#E1DFE0"

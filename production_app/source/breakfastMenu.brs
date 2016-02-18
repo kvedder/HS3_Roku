@@ -54,7 +54,7 @@ Function CreateSchoolMenu(schoolname, schoolid) as integer
             if (msg.isScreenClosed())
                 return -1
             else if (msg.isListItemSelected())
-                ShowBreakfastItemDetails( msg.GetIndex() )
+                ShowBreakfastItemDetails(schoolname, msg.GetIndex() )
             endif
         endif
         
@@ -99,14 +99,14 @@ Function GetBreakfastMenuOptions(id) as object
     return m.options
 End Function
 
-Function ShowBreakfastItemDetails(index as integer) as integer
+Function ShowBreakfastItemDetails(schoolname, index as integer) as integer
     print "Selected Index: " + Stri(index)
 
     detailsScreen = CreateObject("roSpringboardScreen")
     port = CreateObject("roMessagePort")
     detailsScreen.SetMessagePort(port)
     detailsScreen.SetDescriptionStyle("generic")
-    detailsScreen.SetBreadcrumbText("Breakfast", m.options[index].ShortDescriptionLine1)
+    detailsScreen.SetBreadcrumbText(schoolname, m.options[index].ShortDescriptionLine1)
     detailsScreen.SetStaticRatingEnabled(false)
     vUrl = getVideoURL(m.options[index].ID, m.options[index].EntryID)
     streamURL = ParseJSON(vUrl)
@@ -115,6 +115,7 @@ Function ShowBreakfastItemDetails(index as integer) as integer
   
     details = {
         id: m.options[index].ID
+        ContentType: "episode"
         entryId: m.options[index].EntryID
         HDPosterUrl: m.options[index].HDPosterURL
         SDPosterUrl: m.options[index].SDPosterURL
