@@ -78,7 +78,7 @@ Function GetBreakfastMenuOptions(id) as object
     'use foreach to populate array
     for each video in json.Videos
 
-    data = getVideoURL(id, video.kt_entry_id)
+    'data = getVideoURL(id, video.kt_entry_id)
     streamURL = ParseJSON(data)
 
         add = { 
@@ -101,23 +101,29 @@ End Function
 
 Function ShowBreakfastItemDetails(index as integer) as integer
     print "Selected Index: " + Stri(index)
+
     detailsScreen = CreateObject("roSpringboardScreen")
     port = CreateObject("roMessagePort")
     detailsScreen.SetMessagePort(port)
     detailsScreen.SetDescriptionStyle("generic")
     detailsScreen.SetBreadcrumbText("Breakfast", m.options[index].ShortDescriptionLine1)
     detailsScreen.SetStaticRatingEnabled(false)
-    
+    vUrl = getVideoURL(m.options[index].ID, m.options[index].EntryID)
+    streamURL = ParseJSON(vUrl)
+
+    accessStatus = checkAccess()
+  
     details = {
         id: m.options[index].ID
         entryId: m.options[index].EntryID
         HDPosterUrl: m.options[index].HDPosterURL
         SDPosterUrl: m.options[index].SDPosterURL
-        'Description: m.options[index].ShortDescriptionLine1
-        Description: m.options[index].streamURL
+        
+        Description: accessStatus
         LabelAttrs: ["Price:", "Calories per Serving:"]
         LabelVals: [m.options[index].Price, m.options[index].Calories]
-        StreamURL: m.options[index].streamURL
+        StreamURL: streamURL
+        accessStatus: accessStatus
     }
     detailsScreen.SetContent(details)
     detailsScreen.AddButton(1, "Play This Game")
@@ -140,7 +146,11 @@ Function DetailsScreenButtonClicked(index as integer, details) as void
     dialog = CreateObject("roOneLineDialog")
     if (index = 1)
         'dialog.SetTitle("Placing Order")
+        if (details.accessStatus = "true")
         displayVideo(details)
+        else
+        dialog.SetTitle("Sorry, you have  not purchased this game yet. Please go to hs3.tv to subscribe, or purchase this individual game.")
+        end if
     else if (index = 2)
         dialog.SetTitle("Reporting Food to FDA")
     endif
@@ -155,10 +165,25 @@ Function getVideoURL(ID, entryId)
     url="http://hs3.tv/api/get_play_urls.php?id="+ID+"&entryid="+entryId
     xfer=createobject("roURLTransfer")
     xfer.seturl(url)
-    data=xfer.gettostring()
+    data=xfer.getToString()
     
       
     Return data
+End Function
+
+Function checkAccess ()
+    url="http://hs3.tv/api/check_access.php"
+    xfer=createobject("roURLTransfer")
+    xfer.seturl(url)
+    data=xfer.getToString()
+    
+    'validate is access granted is true or false
+    if (data = "1")
+    return "true"
+    else if (data = "0") 
+    return "false"
+    endif     
+    
 End Function
 
 '*************************************************************
