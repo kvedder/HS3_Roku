@@ -42,6 +42,9 @@ Function CreateSchoolMenu(schoolname, schoolid) as integer
     screen.SetListStyle("arced-16x9")
     
     screen.SetBreadcrumbText(schoolname, "Full Menu")
+    if (schoolid = "256")
+    loginEmail = getEmail()
+    else
 
     'need to set the 43 to variable passed from previos screen
     screen.SetContentList(GetBreakfastMenuOptions(schoolid))
@@ -59,6 +62,7 @@ Function CreateSchoolMenu(schoolname, schoolid) as integer
         endif
         
     end while
+    endif
 End Function
 
 Function GetBreakfastMenuOptions(id) as object
@@ -103,6 +107,11 @@ End Function
 Function ShowBreakfastItemDetails(schoolname, index as integer) as integer
     print "Selected Index: " + Stri(index)
 
+     sec = CreateObject("roRegistrySection", "HS3_Email")
+    if sec.Exists("email")
+         hs3email = sec.Read("email")
+         endif
+
     detailsScreen = CreateObject("roSpringboardScreen")
     port = CreateObject("roMessagePort")
     detailsScreen.SetMessagePort(port)
@@ -112,7 +121,7 @@ Function ShowBreakfastItemDetails(schoolname, index as integer) as integer
     vUrl = getVideoURL(m.options[index].ID, m.options[index].EntryID)
     streamURL = ParseJSON(vUrl)
 
-    accessStatus = checkAccess(m.options[index].OfferID, "zabowers@gmail.com")
+    accessStatus = checkAccess(m.options[index].OfferID, hs3email)
   
     details = {
         id: m.options[index].ID
@@ -121,7 +130,7 @@ Function ShowBreakfastItemDetails(schoolname, index as integer) as integer
         HDPosterUrl: m.options[index].HDPosterURL
         SDPosterUrl: m.options[index].SDPosterURL
         
-        Description: accessStatus
+        Description: accessStatus + " " + hs3email
         LabelAttrs: ["Price:", "Calories per Serving:"]
         LabelVals: [m.options[index].Price, m.options[index].Calories]
         StreamURL: streamURL
